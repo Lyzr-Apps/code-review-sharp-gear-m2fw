@@ -1,0 +1,14 @@
+{
+  "agent_name": "PII Test A",
+  "agent_id": "699360fe865ba709e42ce38b",
+  "description": "Test",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "r": "string"
+  },
+  "example_response": {
+    "r": "sample string"
+  }
+}

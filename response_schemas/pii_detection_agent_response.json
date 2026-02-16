@@ -1,0 +1,92 @@
+{
+  "agent_name": "PII Detection Agent",
+  "agent_id": "6993612096cbde6a643c0a2c",
+  "description": "Expert AI agent that scans text and data inputs to detect, classify, and report all forms of Personally Identifiable Information (PII) with severity ratings, risk assessments, and actionable remediation recommendations for data privacy compliance.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "scan_summary": {
+      "total_pii_found": "number",
+      "critical_count": "number",
+      "high_count": "number",
+      "medium_count": "number",
+      "low_count": "number",
+      "categories_detected": [
+        "string"
+      ]
+    },
+    "risk_assessment": {
+      "risk_score": "number",
+      "risk_level": "string",
+      "compliance_flags": [
+        "string"
+      ],
+      "overall_assessment": "string"
+    },
+    "findings": [
+      {
+        "pii_type": "string",
+        "severity": "string",
+        "matched_text": "string",
+        "location": "string",
+        "context": "string",
+        "explanation": "string"
+      }
+    ],
+    "remediation": [
+      {
+        "priority": "string",
+        "action": "string",
+        "description": "string",
+        "compliance_reference": "string"
+      }
+    ]
+  },
+  "example_response": {
+    "scan_summary": {
+      "total_pii_found": 0,
+      "critical_count": 0,
+      "high_count": 0,
+      "medium_count": 0,
+      "low_count": 0,
+      "categories_detected": [
+        "sample string"
+      ]
+    },
+    "risk_assessment": {
+      "risk_score": 0,
+      "risk_level": "sample string",
+      "compliance_flags": [
+        "sample string"
+      ],
+      "overall_assessment": "sample string"
+    },
+    "findings": [
+      {
+        "pii_type": "sample string",
+        "severity": "sample string",
+        "matched_text": "sample string",
+        "location": "sample string",
+        "context": "sample string",
+        "explanation": "sample string"
+      }
+    ],
+    "remediation": [
+      {
+        "priority": "sample string",
+        "action": "sample string",
+        "description": "sample string",
+        "compliance_reference": "sample string"
+      }
+    ]
+  },
+  "has_module_outputs": true,
+  "module_outputs_example": {
+    "artifact_files": [
+      {
+        "file_url": "https://example.com/file.pdf"
+      }
+    ]
+  }
+}

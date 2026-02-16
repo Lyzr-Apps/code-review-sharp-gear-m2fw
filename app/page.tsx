@@ -5,195 +5,208 @@ import { callAIAgent } from '@/lib/aiAgent'
 import { copyToClipboard } from '@/lib/clipboard'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
-  VscCode, VscBug, VscDashboard, VscLightbulb, VscMail,
-  VscCheck, VscChevronDown, VscChevronRight, VscCopy,
-  VscWarning, VscError, VscInfo, VscTrash, VscSend, VscSearch
+  VscSearch, VscShield, VscWarning, VscError, VscInfo, VscCheck,
+  VscCopy, VscChevronDown, VscChevronRight, VscTrash, VscLock,
+  VscKey, VscEye
 } from 'react-icons/vsc'
-import { HiOutlineCheckCircle, HiOutlineExclamationCircle } from 'react-icons/hi'
+import { HiOutlineShieldCheck, HiOutlineExclamationCircle } from 'react-icons/hi'
 
-const MANAGER_AGENT_ID = '699356edc1a177c86d6ed9b1'
+const AGENT_ID = '6993612096cbde6a643c0a2c'
 
 const AGENTS = [
-  { id: '699356edc1a177c86d6ed9b1', name: 'Code Review Coordinator', role: 'Manager - routes to sub-agents' },
-  { id: '699356bb606d81ae3a56a988', name: 'Bug Detection Agent', role: 'Bugs, errors, vulnerabilities' },
-  { id: '699356bc606d81ae3a56a98a', name: 'Performance Analyzer', role: 'Bottlenecks and complexity' },
-  { id: '699356d2b6bc6d320bbb024b', name: 'Report & Delivery', role: 'Compiles and sends via Gmail' },
-]
-
-const LANGUAGES = [
-  'auto-detect', 'python', 'javascript', 'typescript', 'java', 'go',
-  'c++', 'rust', 'ruby', 'php', 'c#', 'swift', 'kotlin'
+  { id: '6993612096cbde6a643c0a2c', name: 'PII Detection Agent', role: 'Scans text for PII, classifies severity, provides remediation' },
 ]
 
 const THEME_VARS = {
-  '--background': '231 18% 14%',
-  '--foreground': '60 30% 96%',
-  '--card': '232 16% 18%',
-  '--card-foreground': '60 30% 96%',
-  '--popover': '232 16% 22%',
-  '--popover-foreground': '60 30% 96%',
-  '--primary': '265 89% 72%',
-  '--primary-foreground': '0 0% 100%',
-  '--secondary': '232 16% 24%',
-  '--secondary-foreground': '60 30% 96%',
-  '--accent': '135 94% 60%',
-  '--accent-foreground': '231 18% 10%',
-  '--destructive': '0 100% 62%',
-  '--muted': '232 16% 28%',
-  '--muted-foreground': '228 10% 62%',
-  '--border': '232 16% 28%',
-  '--input': '232 16% 32%',
-  '--ring': '265 89% 72%',
-  '--radius': '0.875rem',
-  '--chart-1': '265 89% 72%',
-  '--chart-2': '135 94% 60%',
-  '--chart-3': '191 97% 70%',
-  '--chart-4': '326 100% 68%',
-  '--chart-5': '31 100% 65%',
+  '--background': '222 47% 11%',
+  '--foreground': '210 40% 96%',
+  '--card': '222 38% 16%',
+  '--card-foreground': '210 40% 96%',
+  '--popover': '222 38% 18%',
+  '--popover-foreground': '210 40% 96%',
+  '--primary': '173 80% 50%',
+  '--primary-foreground': '222 47% 11%',
+  '--secondary': '222 38% 20%',
+  '--secondary-foreground': '210 40% 96%',
+  '--accent': '142 76% 50%',
+  '--accent-foreground': '222 47% 11%',
+  '--destructive': '0 84% 60%',
+  '--muted': '215 20% 25%',
+  '--muted-foreground': '215 20% 55%',
+  '--border': '217 33% 22%',
+  '--input': '217 33% 25%',
+  '--ring': '173 80% 50%',
+  '--radius': '0.75rem',
 } as React.CSSProperties
 
-interface BugItem {
-  severity?: string
-  title?: string
-  description?: string
-  line_reference?: string
-  category?: string
-}
-
-interface BugSummary {
-  total_bugs?: number
+// --- TypeScript Interfaces ---
+interface ScanSummary {
+  total_pii_found?: number
   critical_count?: number
-  warning_count?: number
-  info_count?: number
+  high_count?: number
+  medium_count?: number
+  low_count?: number
+  categories_detected?: string[]
 }
 
-interface PerfIssue {
+interface RiskAssessment {
+  risk_score?: number
+  risk_level?: string
+  compliance_flags?: string[]
+  overall_assessment?: string
+}
+
+interface Finding {
+  pii_type?: string
+  severity?: string
+  matched_text?: string
+  location?: string
+  context?: string
+  explanation?: string
+}
+
+interface RemediationItem {
   priority?: string
-  title?: string
+  action?: string
   description?: string
-  recommendation?: string
-  impact?: string
+  compliance_reference?: string
 }
 
-interface PerfSummary {
-  total_issues?: number
-  high_priority?: number
-  medium_priority?: number
-  low_priority?: number
+interface PIIResult {
+  scan_summary?: ScanSummary
+  risk_assessment?: RiskAssessment
+  findings?: Finding[]
+  remediation?: RemediationItem[]
 }
 
-interface SuggestionItem {
-  rank?: number
-  suggestion?: string
-  reason?: string
-}
+// --- PII Types ---
+const PII_TYPES = [
+  'Names', 'Email Addresses', 'Phone Numbers', 'SSN', 'Credit Cards',
+  'Dates of Birth', 'Physical Addresses', 'IP Addresses', 'Driver License',
+  'Medical IDs', 'Employee IDs', 'Passwords'
+]
 
-interface AnalysisResult {
-  bug_report?: {
-    bugs?: BugItem[]
-    summary?: BugSummary
-  }
-  performance_report?: {
-    issues?: PerfIssue[]
-    complexity_rating?: string
-    summary?: PerfSummary
-  }
-  delivery_status?: {
-    report_sent?: boolean
-    recipient_email?: string
-  }
-  suggestions?: SuggestionItem[]
-}
+// --- Sample Data ---
+const SAMPLE_TEXT = `Customer Record #4521
+Name: Sarah Jane Thompson
+Email: sarah.thompson@globalcorp.com
+Phone: (415) 555-0187
+Date of Birth: March 15, 1988
 
-const SAMPLE_CODE = `def process_data(data):
-    results = []
-    for i in range(len(data)):
-        item = data[i]
-        if item['type'] == 'active':
-            value = item['amount'] / item['count']
-            results.append(value)
+Billing Information:
+Credit Card: 4532-1234-5678-9012
+Expiration: 09/2026
+SSN: 456-78-9012
 
-    total = 0
-    for r in results:
-        total = total + r
+Shipping Address:
+1247 Oak Valley Drive, Apt 3B
+San Francisco, CA 94110
 
-    avg = total / len(results)
+Employee Notes:
+Sarah's employee ID is EMP-2847. Her manager John Davis (john.davis@globalcorp.com)
+approved the discount. IP address for last login: 192.168.45.201
+Driver's License: D1234567 (California)
+Medical Insurance ID: MED-9928-4415
 
-    connection = open_db_connection()
-    for result in results:
-        connection.execute(
-            "INSERT INTO results VALUES (" + str(result) + ")"
-        )
+Additional contact: husband Mark Thompson, phone 415-555-0293`
 
-    return {'average': avg, 'results': results}`
-
-const SAMPLE_RESULT: AnalysisResult = {
-  bug_report: {
-    bugs: [
-      { severity: 'critical', title: 'SQL Injection Vulnerability', description: 'String concatenation used to build SQL query on line 17. This allows SQL injection attacks through the result variable.', line_reference: 'Line 17', category: 'Security' },
-      { severity: 'critical', title: 'ZeroDivisionError Risk', description: 'Division by len(results) on line 13 without checking if results list is empty. Will crash when no active items exist.', line_reference: 'Line 13', category: 'Logic Error' },
-      { severity: 'warning', title: 'ZeroDivisionError in Loop', description: "Division by item['count'] on line 6 without checking if count is zero.", line_reference: 'Line 6', category: 'Logic Error' },
-      { severity: 'warning', title: 'Resource Leak', description: 'Database connection opened on line 15 is never closed. This will cause connection pool exhaustion over time.', line_reference: 'Line 15', category: 'Resource Management' },
-      { severity: 'info', title: 'Non-Pythonic Iteration', description: 'Using range(len(data)) instead of iterating directly over data. Consider using enumerate() or direct iteration for clarity.', line_reference: 'Line 3', category: 'Code Style' },
-    ],
-    summary: { total_bugs: 5, critical_count: 2, warning_count: 2, info_count: 1 }
+const SAMPLE_RESULT: PIIResult = {
+  scan_summary: {
+    total_pii_found: 14,
+    critical_count: 3,
+    high_count: 5,
+    medium_count: 4,
+    low_count: 2,
+    categories_detected: [
+      'Full Names', 'Email Addresses', 'Phone Numbers', 'Social Security Numbers',
+      'Credit Card Numbers', 'Dates of Birth', 'Physical Addresses', 'IP Addresses',
+      'Driver License Numbers', 'Medical IDs', 'Employee IDs'
+    ]
   },
-  performance_report: {
-    issues: [
-      { priority: 'high', title: 'Repeated Database Calls in Loop', description: 'Individual INSERT statements executed inside a loop on line 17.', recommendation: 'Use batch inserts or executemany() to reduce round-trips to the database.', impact: 'O(n) database calls instead of O(1) with batching.' },
-      { priority: 'medium', title: 'Redundant Loop for Summation', description: 'Separate loop used for summing results when it could be done in the first loop.', recommendation: 'Combine the summation into the initial processing loop to eliminate the second pass.', impact: 'Reduces iterations from 2n to n.' },
-      { priority: 'low', title: 'Suboptimal List Access Pattern', description: 'Using index-based access with range(len()) instead of direct iteration.', recommendation: 'Use for item in data: instead of index-based access for cleaner and marginally faster code.', impact: 'Minor improvement in readability and negligible speed gain.' },
-    ],
-    complexity_rating: 'O(n) with high constant factor',
-    summary: { total_issues: 3, high_priority: 1, medium_priority: 1, low_priority: 1 }
+  risk_assessment: {
+    risk_score: 92,
+    risk_level: 'critical',
+    compliance_flags: ['GDPR Article 9', 'CCPA Section 1798.140', 'HIPAA PHI', 'PCI DSS Requirement 3'],
+    overall_assessment: 'This data contains a high concentration of sensitive PII including financial data (credit card, SSN), health-related identifiers (Medical Insurance ID), and multiple forms of direct identifiers. Immediate remediation is required to prevent data breach exposure. The combination of full name with SSN and credit card number creates an extreme identity theft risk.'
   },
-  delivery_status: {
-    report_sent: true,
-    recipient_email: 'developer@example.com'
-  },
-  suggestions: [
-    { rank: 1, suggestion: 'Use parameterized queries for all database operations', reason: 'Eliminates SQL injection vulnerability, the most critical security issue found.' },
-    { rank: 2, suggestion: 'Add guard clauses for division operations', reason: 'Prevents ZeroDivisionError crashes in both the loop and average calculation.' },
-    { rank: 3, suggestion: 'Implement context managers for database connections', reason: 'Ensures connections are properly closed even when exceptions occur.' },
-    { rank: 4, suggestion: 'Use batch database inserts', reason: 'Dramatically improves performance by reducing database round-trips from O(n) to O(1).' },
-    { rank: 5, suggestion: 'Consolidate loops into a single pass', reason: 'Improves efficiency and readability by processing and summing in one iteration.' },
+  findings: [
+    { pii_type: 'Social Security Number', severity: 'critical', matched_text: '456-78-9012', location: 'Line 10', context: 'SSN: 456-78-9012', explanation: 'A Social Security Number was detected. SSNs are classified as critical PII due to their permanent nature and direct use in identity theft.' },
+    { pii_type: 'Credit Card Number', severity: 'critical', matched_text: '4532-1234-5678-9012', location: 'Line 8', context: 'Credit Card: 4532-1234-5678-9012', explanation: 'A credit card number (Visa) was detected. This is PCI DSS regulated data that must never be stored in plain text.' },
+    { pii_type: 'Driver License Number', severity: 'critical', matched_text: 'D1234567', location: 'Line 18', context: "Driver's License: D1234567 (California)", explanation: 'A state-issued driver license number was detected. Combined with the name, this enables identity fraud.' },
+    { pii_type: 'Full Name', severity: 'high', matched_text: 'Sarah Jane Thompson', location: 'Line 2', context: 'Name: Sarah Jane Thompson', explanation: 'A full legal name was detected. When combined with other PII in this record, it creates a complete identity profile.' },
+    { pii_type: 'Email Address', severity: 'high', matched_text: 'sarah.thompson@globalcorp.com', location: 'Line 3', context: 'Email: sarah.thompson@globalcorp.com', explanation: 'A corporate email address was detected, revealing both personal identity and organizational affiliation.' },
+    { pii_type: 'Phone Number', severity: 'high', matched_text: '(415) 555-0187', location: 'Line 4', context: 'Phone: (415) 555-0187', explanation: 'A US phone number with area code was detected. This is directly linkable PII.' },
+    { pii_type: 'Physical Address', severity: 'high', matched_text: '1247 Oak Valley Drive, Apt 3B, San Francisco, CA 94110', location: 'Lines 12-13', context: 'Shipping Address section', explanation: 'A complete residential address including apartment number and ZIP code was detected.' },
+    { pii_type: 'Medical Insurance ID', severity: 'high', matched_text: 'MED-9928-4415', location: 'Line 19', context: 'Medical Insurance ID: MED-9928-4415', explanation: 'A medical insurance identifier was detected. This is classified as Protected Health Information (PHI) under HIPAA.' },
+    { pii_type: 'Date of Birth', severity: 'medium', matched_text: 'March 15, 1988', location: 'Line 5', context: 'Date of Birth: March 15, 1988', explanation: 'A complete date of birth was detected. Combined with name, this is a key identity verification factor.' },
+    { pii_type: 'IP Address', severity: 'medium', matched_text: '192.168.45.201', location: 'Line 17', context: 'IP address for last login: 192.168.45.201', explanation: 'An IP address was detected. While this is a private range address, it reveals network location information.' },
+    { pii_type: 'Email Address', severity: 'medium', matched_text: 'john.davis@globalcorp.com', location: 'Line 16', context: 'manager John Davis (john.davis@globalcorp.com)', explanation: 'A secondary email address was detected, identifying another individual by name and email.' },
+    { pii_type: 'Phone Number', severity: 'medium', matched_text: '415-555-0293', location: 'Line 21', context: 'phone 415-555-0293', explanation: 'A secondary phone number was detected for an additional contact person.' },
+    { pii_type: 'Employee ID', severity: 'low', matched_text: 'EMP-2847', location: 'Line 16', context: "employee ID is EMP-2847", explanation: 'An internal employee identifier was detected. While not public PII, it links to internal systems.' },
+    { pii_type: 'Full Name', severity: 'low', matched_text: 'Mark Thompson', location: 'Line 21', context: 'husband Mark Thompson', explanation: 'A secondary person name was detected with a familial relationship reference.' },
+  ],
+  remediation: [
+    { priority: 'critical', action: 'Remove or tokenize SSN and Credit Card data immediately', description: 'Social Security Numbers and credit card numbers must never be stored in plain text. Implement tokenization or encryption at rest. Use masked display (e.g., ***-**-9012) for any necessary viewing.', compliance_reference: 'PCI DSS Requirement 3.4, NIST SP 800-122' },
+    { priority: 'critical', action: 'Encrypt driver license and medical insurance IDs', description: 'Government-issued IDs and health identifiers require encryption and access controls. Implement field-level encryption for these data elements.', compliance_reference: 'HIPAA Security Rule 164.312(a)(1), CCPA 1798.150' },
+    { priority: 'high', action: 'Implement data minimization for personal identifiers', description: 'Evaluate whether full names, complete addresses, and dates of birth need to be stored in this format. Consider pseudonymization or partial redaction where full data is not required.', compliance_reference: 'GDPR Article 5(1)(c), CCPA 1798.100' },
+    { priority: 'high', action: 'Restrict access with role-based controls', description: 'This record contains sufficient data for complete identity theft. Implement strict role-based access controls (RBAC) and audit logging for any access to this data.', compliance_reference: 'GDPR Article 32, SOC 2 CC6.1' },
+    { priority: 'medium', action: 'Redact secondary individual PII', description: 'The record contains PII for secondary individuals (John Davis, Mark Thompson) who may not have consented to this data storage. Remove or anonymize these references.', compliance_reference: 'GDPR Article 6(1), CCPA 1798.100(a)' },
+    { priority: 'low', action: 'Review IP address and employee ID storage', description: 'Assess whether IP address logging and employee ID references are necessary in this customer record. Consider storing these in separate, access-controlled systems.', compliance_reference: 'GDPR Recital 30, ISO 27001 A.8.2' },
   ]
 }
 
-function getSeverityStyles(severity: string): string {
+// --- Helpers ---
+function getSeverityColor(severity: string): string {
   const s = (severity ?? '').toLowerCase()
-  if (s === 'critical') return 'bg-red-500/20 text-red-400 border border-red-500/30'
-  if (s === 'warning') return 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-  return 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+  if (s === 'critical') return 'hsl(0 84% 60%)'
+  if (s === 'high') return 'hsl(25 95% 60%)'
+  if (s === 'medium' || s === 'moderate') return 'hsl(38 92% 55%)'
+  return 'hsl(142 76% 50%)'
+}
+
+function getSeverityBg(severity: string): string {
+  const s = (severity ?? '').toLowerCase()
+  if (s === 'critical') return 'bg-red-500/15 text-red-400 border border-red-500/30'
+  if (s === 'high') return 'bg-orange-500/15 text-orange-400 border border-orange-500/30'
+  if (s === 'medium' || s === 'moderate') return 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+  return 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
 }
 
 function getSeverityIcon(severity: string) {
   const s = (severity ?? '').toLowerCase()
   if (s === 'critical') return <VscError className="h-4 w-4 text-red-400 flex-shrink-0" />
-  if (s === 'warning') return <VscWarning className="h-4 w-4 text-amber-400 flex-shrink-0" />
-  return <VscInfo className="h-4 w-4 text-cyan-400 flex-shrink-0" />
+  if (s === 'high') return <VscWarning className="h-4 w-4 text-orange-400 flex-shrink-0" />
+  if (s === 'medium' || s === 'moderate') return <VscWarning className="h-4 w-4 text-amber-400 flex-shrink-0" />
+  return <VscInfo className="h-4 w-4 text-emerald-400 flex-shrink-0" />
 }
 
-function getPriorityStyles(priority: string): string {
+function getRiskColor(level: string): string {
+  const l = (level ?? '').toLowerCase()
+  if (l === 'critical') return 'hsl(0 84% 60%)'
+  if (l === 'high') return 'hsl(25 95% 60%)'
+  if (l === 'moderate') return 'hsl(38 92% 55%)'
+  return 'hsl(142 76% 50%)'
+}
+
+function getPriorityBg(priority: string): string {
   const p = (priority ?? '').toLowerCase()
-  if (p === 'high') return 'bg-red-500/20 text-red-400 border border-red-500/30'
-  if (p === 'medium') return 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-  return 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+  if (p === 'critical') return 'bg-red-500/15 text-red-400 border border-red-500/30'
+  if (p === 'high') return 'bg-orange-500/15 text-orange-400 border border-orange-500/30'
+  if (p === 'medium') return 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+  return 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
 }
 
 function renderMarkdown(text: string) {
   if (!text) return null
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       {text.split('\n').map((line, i) => {
         if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-sm mt-3 mb-1">{line.slice(4)}</h4>
         if (line.startsWith('## ')) return <h3 key={i} className="font-semibold text-base mt-3 mb-1">{line.slice(3)}</h3>
@@ -215,7 +228,9 @@ function formatInline(text: string) {
   )
 }
 
-function CodeEditorArea({ code, onChange, lineCount }: { code: string; onChange: (val: string) => void; lineCount: number }) {
+// --- Sub-Components ---
+
+function DataEditorArea({ text, onChange, lineCount }: { text: string; onChange: (val: string) => void; lineCount: number }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const lineNumbersRef = useRef<HTMLDivElement>(null)
 
@@ -231,28 +246,279 @@ function CodeEditorArea({ code, onChange, lineCount }: { code: string; onChange:
   }, [lineCount])
 
   return (
-    <div className="relative flex rounded-xl overflow-hidden border border-border shadow-xl" style={{ backgroundColor: 'hsl(231 18% 10%)' }}>
+    <div className="relative flex rounded-lg overflow-hidden border border-border shadow-xl" style={{ backgroundColor: 'hsl(222 47% 8%)' }}>
       <div
         ref={lineNumbersRef}
         className="flex-shrink-0 select-none overflow-hidden py-3 px-2 text-right font-mono text-xs leading-6"
-        style={{ color: 'hsl(228 10% 38%)', width: '3.5rem' }}
+        style={{ color: 'hsl(215 20% 35%)', width: '3.5rem' }}
       >
         {lines.map(n => (
           <div key={n}>{n}</div>
         ))}
       </div>
-      <div className="w-px flex-shrink-0" style={{ backgroundColor: 'hsl(232 16% 20%)' }} />
+      <div className="w-px flex-shrink-0" style={{ backgroundColor: 'hsl(217 33% 18%)' }} />
       <textarea
         ref={textareaRef}
-        value={code}
+        value={text}
         onChange={(e) => onChange(e.target.value)}
         onScroll={handleScroll}
-        placeholder="Paste your code here..."
+        placeholder="Paste your text, data, or documents here to scan for PII..."
         spellCheck={false}
         className="flex-1 resize-none bg-transparent py-3 px-4 font-mono text-sm leading-6 text-foreground placeholder:text-muted-foreground focus:outline-none"
-        style={{ minHeight: '400px', tabSize: 4 }}
+        style={{ minHeight: '420px', tabSize: 4 }}
       />
     </div>
+  )
+}
+
+function RiskScoreGauge({ score, level }: { score: number; level: string }) {
+  const color = getRiskColor(level)
+  const circumference = 2 * Math.PI * 54
+  const progress = ((score ?? 0) / 100) * circumference
+  const offset = circumference - progress
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative w-36 h-36">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="54" fill="none" stroke="hsl(217 33% 18%)" strokeWidth="8" />
+          <circle
+            cx="60" cy="60" r="54" fill="none"
+            stroke={color}
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-3xl font-bold" style={{ color }}>{score ?? 0}</span>
+          <span className="text-xs text-muted-foreground mt-0.5">/ 100</span>
+        </div>
+      </div>
+      <Badge className={`mt-3 text-xs font-semibold uppercase tracking-wider ${getSeverityBg(level)}`} variant="outline">
+        {level ?? 'Unknown'} Risk
+      </Badge>
+    </div>
+  )
+}
+
+function ScanSummaryGrid({ summary }: { summary: ScanSummary }) {
+  const counts = [
+    { label: 'Total PII', count: summary?.total_pii_found ?? 0, color: 'hsl(173 80% 50%)' },
+    { label: 'Critical', count: summary?.critical_count ?? 0, color: 'hsl(0 84% 60%)' },
+    { label: 'High', count: summary?.high_count ?? 0, color: 'hsl(25 95% 60%)' },
+    { label: 'Medium', count: summary?.medium_count ?? 0, color: 'hsl(38 92% 55%)' },
+    { label: 'Low', count: summary?.low_count ?? 0, color: 'hsl(142 76% 50%)' },
+  ]
+
+  return (
+    <div className="grid grid-cols-5 gap-2">
+      {counts.map((item) => (
+        <div key={item.label} className="text-center rounded-lg p-2.5" style={{ backgroundColor: 'hsl(222 47% 8%)' }}>
+          <div className="text-xl font-bold" style={{ color: item.color }}>{item.count}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">{item.label}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function FindingsSection({
+  findings, expandedSections, toggleSection, onCopy, copiedId, filterSeverity, setFilterSeverity
+}: {
+  findings: Finding[]
+  expandedSections: Record<string, boolean>
+  toggleSection: (id: string) => void
+  onCopy: (text: string, id: string) => void
+  copiedId: string | null
+  filterSeverity: string
+  setFilterSeverity: (v: string) => void
+}) {
+  const isOpen = expandedSections['findings'] !== false
+
+  const filteredFindings = useMemo(() => {
+    if (filterSeverity === 'all') return findings
+    return findings.filter(f => (f?.severity ?? '').toLowerCase() === filterSeverity)
+  }, [findings, filterSeverity])
+
+  return (
+    <Card className="border-border shadow-xl">
+      <Collapsible open={isOpen} onOpenChange={() => toggleSection('findings')}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-secondary/30 transition-colors pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center h-9 w-9 rounded-lg" style={{ backgroundColor: 'hsl(25 95% 60% / 0.15)' }}>
+                  <VscEye className="h-5 w-5" style={{ color: 'hsl(25 95% 60%)' }} />
+                </div>
+                <div>
+                  <CardTitle className="text-base">PII Findings</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">{findings.length} item{findings.length !== 1 ? 's' : ''} detected</CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-primary/15 text-primary border border-primary/30 hidden sm:inline-flex" variant="outline">{findings.length}</Badge>
+                {isOpen ? <VscChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <VscChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+              </div>
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-0 space-y-3">
+            {/* Filter pills */}
+            <div className="flex flex-wrap gap-1.5">
+              {['all', 'critical', 'high', 'medium', 'low'].map(sev => (
+                <button
+                  key={sev}
+                  onClick={(e) => { e.stopPropagation(); setFilterSeverity(sev); }}
+                  className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${filterSeverity === sev ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
+                >
+                  {sev === 'all' ? 'All' : sev.charAt(0).toUpperCase() + sev.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {filteredFindings.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No findings matching this filter.</p>
+            ) : (
+              filteredFindings.map((finding, idx) => (
+                <div key={idx} className="rounded-lg border border-border p-3 space-y-2.5" style={{ backgroundColor: 'hsl(222 47% 8%)' }}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+                      {getSeverityIcon(finding?.severity ?? '')}
+                      <Badge className={getSeverityBg(finding?.severity ?? '')} variant="outline">
+                        {(finding?.severity ?? 'low').toUpperCase()}
+                      </Badge>
+                      <span className="font-medium text-sm text-foreground">{finding?.pii_type ?? 'Unknown PII'}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-foreground"
+                      onClick={(e) => { e.stopPropagation(); onCopy(`${finding?.pii_type ?? ''}: ${finding?.matched_text ?? ''} - ${finding?.explanation ?? ''}`, `finding-${idx}`); }}
+                    >
+                      {copiedId === `finding-${idx}` ? <VscCheck className="h-3.5 w-3.5 text-emerald-400" /> : <VscCopy className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
+
+                  {/* Matched text with redaction style */}
+                  <div className="rounded-md px-3 py-2 font-mono text-sm" style={{ backgroundColor: 'hsl(0 84% 60% / 0.08)', borderLeft: `3px solid ${getSeverityColor(finding?.severity ?? '')}` }}>
+                    <span className="text-xs text-muted-foreground block mb-1">Matched Text</span>
+                    <span className="text-foreground">{finding?.matched_text ?? ''}</span>
+                  </div>
+
+                  {/* Location */}
+                  {finding?.location && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="font-mono px-2 py-0.5 rounded" style={{ backgroundColor: 'hsl(173 80% 50% / 0.1)', color: 'hsl(173 80% 55%)' }}>
+                        {finding.location}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Context */}
+                  {finding?.context && (
+                    <div className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground/70">Context: </span>
+                      <span className="font-mono">{finding.context}</span>
+                    </div>
+                  )}
+
+                  {/* Explanation */}
+                  {finding?.explanation && (
+                    <p className="text-sm text-muted-foreground leading-relaxed">{finding.explanation}</p>
+                  )}
+                </div>
+              ))
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  )
+}
+
+function RemediationSection({
+  remediation, expandedSections, toggleSection, onCopy, copiedId
+}: {
+  remediation: RemediationItem[]
+  expandedSections: Record<string, boolean>
+  toggleSection: (id: string) => void
+  onCopy: (text: string, id: string) => void
+  copiedId: string | null
+}) {
+  const isOpen = expandedSections['remediation'] !== false
+
+  return (
+    <Card className="border-border shadow-xl">
+      <Collapsible open={isOpen} onOpenChange={() => toggleSection('remediation')}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-secondary/30 transition-colors pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center h-9 w-9 rounded-lg" style={{ backgroundColor: 'hsl(142 76% 50% / 0.15)' }}>
+                  <HiOutlineShieldCheck className="h-5 w-5" style={{ color: 'hsl(142 76% 55%)' }} />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Remediation Actions</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">{remediation.length} action{remediation.length !== 1 ? 's' : ''} recommended</CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hidden sm:inline-flex" variant="outline">{remediation.length}</Badge>
+                {isOpen ? <VscChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <VscChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+              </div>
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-0 space-y-3">
+            {remediation.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No remediation actions needed.</p>
+            ) : (
+              remediation.map((item, idx) => (
+                <div key={idx} className="rounded-lg border border-border p-3 space-y-2" style={{ backgroundColor: 'hsl(222 47% 8%)' }}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2 flex-1 min-w-0">
+                      <div className="flex items-center justify-center h-6 w-6 rounded-full flex-shrink-0 font-mono text-xs font-bold mt-0.5" style={{ backgroundColor: 'hsl(173 80% 50% / 0.15)', color: 'hsl(173 80% 55%)' }}>
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <Badge className={getPriorityBg(item?.priority ?? '')} variant="outline">
+                            {(item?.priority ?? 'low').toUpperCase()}
+                          </Badge>
+                          <span className="font-medium text-sm text-foreground">{item?.action ?? 'Action Required'}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{item?.description ?? ''}</p>
+                        {item?.compliance_reference && (
+                          <div className="flex items-center gap-1.5 mt-2">
+                            <VscLock className="h-3 w-3 text-primary flex-shrink-0" />
+                            <span className="text-xs font-mono" style={{ color: 'hsl(173 80% 55%)' }}>
+                              {item.compliance_reference}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-foreground"
+                      onClick={(e) => { e.stopPropagation(); onCopy(`${item?.action ?? ''}: ${item?.description ?? ''} (${item?.compliance_reference ?? ''})`, `rem-${idx}`); }}
+                    >
+                      {copiedId === `rem-${idx}` ? <VscCheck className="h-3.5 w-3.5 text-emerald-400" /> : <VscCopy className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
   )
 }
 
@@ -261,9 +527,42 @@ function LoadingSkeletons() {
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-2">
         <VscSearch className="h-5 w-5 text-primary animate-pulse" />
-        <span className="text-sm text-muted-foreground animate-pulse">Analyzing your code...</span>
+        <span className="text-sm text-muted-foreground animate-pulse">Scanning for PII...</span>
       </div>
-      {[1, 2, 3].map(i => (
+      {/* Risk score skeleton */}
+      <Card className="border-border shadow-lg">
+        <CardContent className="py-6 flex flex-col items-center">
+          <Skeleton className="h-36 w-36 rounded-full" />
+          <Skeleton className="h-5 w-24 mt-3 rounded-full" />
+          <Skeleton className="h-3 w-48 mt-3" />
+        </CardContent>
+      </Card>
+      {/* Summary skeleton */}
+      <Card className="border-border shadow-lg">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-9 rounded-lg" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-3/5" />
+              <Skeleton className="h-3 w-2/5" />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="grid grid-cols-5 gap-2">
+            {[1, 2, 3, 4, 5].map(i => (
+              <Skeleton key={i} className="h-16 rounded-lg" />
+            ))}
+          </div>
+          <div className="flex gap-2 pt-2 flex-wrap">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-5 w-20 rounded-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      {/* Findings skeleton */}
+      {[1, 2].map(i => (
         <Card key={i} className="border-border shadow-lg">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
@@ -278,10 +577,6 @@ function LoadingSkeletons() {
             <Skeleton className="h-3 w-full" />
             <Skeleton className="h-3 w-4/5" />
             <Skeleton className="h-3 w-3/5" />
-            <div className="flex gap-2 pt-2">
-              <Skeleton className="h-5 w-16 rounded-full" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </div>
           </CardContent>
         </Card>
       ))}
@@ -292,258 +587,12 @@ function LoadingSkeletons() {
 function EmptyResultsState() {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-      <div className="rounded-2xl p-6 mb-6" style={{ backgroundColor: 'hsl(232 16% 20%)' }}>
-        <VscCode className="h-12 w-12 text-primary" />
+      <div className="rounded-2xl p-6 mb-6" style={{ backgroundColor: 'hsl(222 38% 18%)' }}>
+        <VscShield className="h-12 w-12 text-primary" />
       </div>
-      <h3 className="text-lg font-semibold text-foreground mb-2">Submit code to see analysis results</h3>
-      <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">Paste your code in the left panel, select a language, provide a recipient email, and click analyze.</p>
+      <h3 className="text-lg font-semibold text-foreground mb-2">Submit data to scan for PII</h3>
+      <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">Paste text, customer records, logs, or any data in the left panel and click scan. PII Shield will detect and classify all personally identifiable information.</p>
     </div>
-  )
-}
-
-function BugReportSection({
-  bugs, summary, expandedSections, toggleSection, onCopy, copiedId
-}: {
-  bugs: BugItem[]
-  summary: BugSummary
-  expandedSections: Record<string, boolean>
-  toggleSection: (id: string) => void
-  onCopy: (text: string, id: string) => void
-  copiedId: string | null
-}) {
-  const totalBugs = summary?.total_bugs ?? 0
-  const criticalCount = summary?.critical_count ?? 0
-  const warningCount = summary?.warning_count ?? 0
-  const infoCount = summary?.info_count ?? 0
-  const isOpen = expandedSections['bugs'] !== false
-
-  return (
-    <Card className="border-border shadow-xl">
-      <Collapsible open={isOpen} onOpenChange={() => toggleSection('bugs')}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-secondary/30 transition-colors pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-red-500/15">
-                  <VscBug className="h-5 w-5 text-red-400" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">Bug Report</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">{totalBugs} issue{totalBugs !== 1 ? 's' : ''} found</CardDescription>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="hidden sm:flex items-center gap-1.5">
-                  {criticalCount > 0 && <Badge className={getSeverityStyles('critical')} variant="outline">{criticalCount} Critical</Badge>}
-                  {warningCount > 0 && <Badge className={getSeverityStyles('warning')} variant="outline">{warningCount} Warning</Badge>}
-                  {infoCount > 0 && <Badge className={getSeverityStyles('info')} variant="outline">{infoCount} Info</Badge>}
-                </div>
-                {isOpen ? <VscChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <VscChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
-              </div>
-            </div>
-          </CardHeader>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="pt-0 space-y-3">
-            <div className="flex sm:hidden items-center gap-1.5 mb-2">
-              {criticalCount > 0 && <Badge className={getSeverityStyles('critical')} variant="outline">{criticalCount} Critical</Badge>}
-              {warningCount > 0 && <Badge className={getSeverityStyles('warning')} variant="outline">{warningCount} Warning</Badge>}
-              {infoCount > 0 && <Badge className={getSeverityStyles('info')} variant="outline">{infoCount} Info</Badge>}
-            </div>
-            {bugs.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No bugs found -- great work!</p>
-            ) : (
-              bugs.map((bug, idx) => (
-                <div key={idx} className="rounded-lg border border-border p-3 space-y-2" style={{ backgroundColor: 'hsl(232 16% 15%)' }}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      {getSeverityIcon(bug?.severity ?? '')}
-                      <span className="font-medium text-sm text-foreground">{bug?.title ?? 'Untitled'}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <Badge className={getSeverityStyles(bug?.severity ?? '')} variant="outline">
-                        {(bug?.severity ?? 'info').toUpperCase()}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                        onClick={(e) => { e.stopPropagation(); onCopy(`${bug?.title ?? ''}: ${bug?.description ?? ''}`, `bug-${idx}`); }}
-                      >
-                        {copiedId === `bug-${idx}` ? <VscCheck className="h-3.5 w-3.5 text-green-400" /> : <VscCopy className="h-3.5 w-3.5" />}
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{bug?.description ?? ''}</p>
-                  <div className="flex items-center gap-3 text-xs">
-                    {bug?.line_reference && (
-                      <span className="font-mono px-2 py-0.5 rounded" style={{ backgroundColor: 'hsl(265 89% 72% / 0.15)', color: 'hsl(265 89% 78%)' }}>{bug.line_reference}</span>
-                    )}
-                    {bug?.category && (
-                      <span className="text-muted-foreground">{bug.category}</span>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
-  )
-}
-
-function PerformanceSection({
-  issues, summary, complexityRating, expandedSections, toggleSection, onCopy, copiedId
-}: {
-  issues: PerfIssue[]
-  summary: PerfSummary
-  complexityRating: string
-  expandedSections: Record<string, boolean>
-  toggleSection: (id: string) => void
-  onCopy: (text: string, id: string) => void
-  copiedId: string | null
-}) {
-  const totalIssues = summary?.total_issues ?? 0
-  const highCount = summary?.high_priority ?? 0
-  const medCount = summary?.medium_priority ?? 0
-  const lowCount = summary?.low_priority ?? 0
-  const isOpen = expandedSections['perf'] !== false
-
-  return (
-    <Card className="border-border shadow-xl">
-      <Collapsible open={isOpen} onOpenChange={() => toggleSection('perf')}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-secondary/30 transition-colors pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-amber-500/15">
-                  <VscDashboard className="h-5 w-5 text-amber-400" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">Performance Analysis</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">{totalIssues} bottleneck{totalIssues !== 1 ? 's' : ''} detected</CardDescription>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {complexityRating && (
-                  <Badge className="bg-purple-500/20 text-purple-400 border border-purple-500/30 hidden sm:inline-flex" variant="outline">{complexityRating}</Badge>
-                )}
-                {isOpen ? <VscChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <VscChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
-              </div>
-            </div>
-          </CardHeader>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="pt-0 space-y-3">
-            <div className="flex flex-wrap items-center gap-1.5 mb-1">
-              {complexityRating && (
-                <Badge className="bg-purple-500/20 text-purple-400 border border-purple-500/30 sm:hidden" variant="outline">{complexityRating}</Badge>
-              )}
-              {highCount > 0 && <Badge className={getPriorityStyles('high')} variant="outline">{highCount} High</Badge>}
-              {medCount > 0 && <Badge className={getPriorityStyles('medium')} variant="outline">{medCount} Medium</Badge>}
-              {lowCount > 0 && <Badge className={getPriorityStyles('low')} variant="outline">{lowCount} Low</Badge>}
-            </div>
-            {issues.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No performance issues found.</p>
-            ) : (
-              issues.map((issue, idx) => (
-                <div key={idx} className="rounded-lg border border-border p-3 space-y-2" style={{ backgroundColor: 'hsl(232 16% 15%)' }}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <Badge className={getPriorityStyles(issue?.priority ?? '')} variant="outline">
-                        {(issue?.priority ?? 'low').toUpperCase()}
-                      </Badge>
-                      <span className="font-medium text-sm text-foreground">{issue?.title ?? 'Untitled'}</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-foreground"
-                      onClick={(e) => { e.stopPropagation(); onCopy(`${issue?.title ?? ''}: ${issue?.description ?? ''}\nRecommendation: ${issue?.recommendation ?? ''}`, `perf-${idx}`); }}
-                    >
-                      {copiedId === `perf-${idx}` ? <VscCheck className="h-3.5 w-3.5 text-green-400" /> : <VscCopy className="h-3.5 w-3.5" />}
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{issue?.description ?? ''}</p>
-                  {issue?.recommendation && (
-                    <div className="rounded-md p-2.5" style={{ backgroundColor: 'hsl(135 94% 60% / 0.07)' }}>
-                      <p className="text-xs font-medium mb-1" style={{ color: 'hsl(135 94% 65%)' }}>Recommendation</p>
-                      <p className="text-sm text-foreground/80">{issue.recommendation}</p>
-                    </div>
-                  )}
-                  {issue?.impact && (
-                    <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground/70">Impact:</span> {issue.impact}</p>
-                  )}
-                </div>
-              ))
-            )}
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
-  )
-}
-
-function SuggestionsSection({
-  suggestions, expandedSections, toggleSection, onCopy, copiedId
-}: {
-  suggestions: SuggestionItem[]
-  expandedSections: Record<string, boolean>
-  toggleSection: (id: string) => void
-  onCopy: (text: string, id: string) => void
-  copiedId: string | null
-}) {
-  const isOpen = expandedSections['suggestions'] !== false
-
-  return (
-    <Card className="border-border shadow-xl">
-      <Collapsible open={isOpen} onOpenChange={() => toggleSection('suggestions')}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-secondary/30 transition-colors pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center h-9 w-9 rounded-lg" style={{ backgroundColor: 'hsl(135 94% 60% / 0.15)' }}>
-                  <VscLightbulb className="h-5 w-5" style={{ color: 'hsl(135 94% 65%)' }} />
-                </div>
-                <div>
-                  <CardTitle className="text-base">Improvement Suggestions</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">{suggestions.length} actionable recommendation{suggestions.length !== 1 ? 's' : ''}</CardDescription>
-                </div>
-              </div>
-              {isOpen ? <VscChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <VscChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
-            </div>
-          </CardHeader>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="pt-0 space-y-3">
-            {suggestions.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No suggestions available.</p>
-            ) : (
-              suggestions.map((s, idx) => (
-                <div key={idx} className="flex gap-3 items-start rounded-lg border border-border p-3" style={{ backgroundColor: 'hsl(232 16% 15%)' }}>
-                  <div className="flex items-center justify-center h-7 w-7 rounded-full flex-shrink-0 font-mono text-xs font-bold" style={{ backgroundColor: 'hsl(265 89% 72% / 0.2)', color: 'hsl(265 89% 78%)' }}>
-                    {s?.rank ?? idx + 1}
-                  </div>
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <p className="text-sm font-medium text-foreground">{s?.suggestion ?? ''}</p>
-                    {s?.reason && <p className="text-xs text-muted-foreground leading-relaxed">{s.reason}</p>}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-foreground"
-                    onClick={(e) => { e.stopPropagation(); onCopy(`${s?.suggestion ?? ''}: ${s?.reason ?? ''}`, `sug-${idx}`); }}
-                  >
-                    {copiedId === `sug-${idx}` ? <VscCheck className="h-3.5 w-3.5 text-green-400" /> : <VscCopy className="h-3.5 w-3.5" />}
-                  </Button>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
   )
 }
 
@@ -554,23 +603,23 @@ function AgentStatusPanel({ activeAgentId }: { activeAgentId: string | null }) {
         <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Agent Pipeline</CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-3 pt-0">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+        <div className="space-y-1.5">
           {AGENTS.map(agent => {
             const isActive = activeAgentId === agent.id
             return (
               <div
                 key={agent.id}
                 className="flex items-center gap-2 rounded-md px-2.5 py-1.5 transition-colors"
-                style={{ backgroundColor: isActive ? 'hsl(265 89% 72% / 0.1)' : 'transparent' }}
+                style={{ backgroundColor: isActive ? 'hsl(173 80% 50% / 0.08)' : 'transparent' }}
               >
                 <div
-                  className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                  className="h-2 w-2 rounded-full flex-shrink-0"
                   style={{
                     backgroundColor: isActive
-                      ? 'hsl(265 89% 72%)'
+                      ? 'hsl(173 80% 50%)'
                       : activeAgentId
-                        ? 'hsl(228 10% 38%)'
-                        : 'hsl(135 94% 55%)'
+                        ? 'hsl(215 20% 35%)'
+                        : 'hsl(142 76% 50%)'
                   }}
                 />
                 <div className="min-w-0">
@@ -586,66 +635,52 @@ function AgentStatusPanel({ activeAgentId }: { activeAgentId: string | null }) {
   )
 }
 
+// --- Main Page Component ---
 export default function Page() {
-  const [code, setCode] = useState('')
-  const [language, setLanguage] = useState('auto-detect')
-  const [recipientEmail, setRecipientEmail] = useState('')
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
+  const [inputText, setInputText] = useState('')
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanResult, setScanResult] = useState<PIIResult | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [emailError, setEmailError] = useState<string | null>(null)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [activeAgentId, setActiveAgentId] = useState<string | null>(null)
   const [showSampleData, setShowSampleData] = useState(false)
+  const [filterSeverity, setFilterSeverity] = useState('all')
 
-  const validateEmail = useCallback((email: string): boolean => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return re.test(email)
-  }, [])
-
-  // Determine what to display
-  const displayCode = showSampleData && !code ? SAMPLE_CODE : code
-  const displayResult = showSampleData && !analysisResult ? SAMPLE_RESULT : analysisResult
-  const displayEmail = showSampleData && !recipientEmail ? 'developer@example.com' : recipientEmail
+  // Determine display data
+  const displayText = showSampleData && !inputText ? SAMPLE_TEXT : inputText
+  const displayResult = showSampleData && !scanResult ? SAMPLE_RESULT : scanResult
 
   const lineCount = useMemo(() => {
-    return displayCode.split('\n').length
-  }, [displayCode])
+    return displayText.split('\n').length
+  }, [displayText])
 
-  const handleAnalyze = useCallback(async () => {
-    const codeToAnalyze = displayCode.trim()
-    const emailToUse = displayEmail.trim()
+  const handleScan = useCallback(async () => {
+    const textToScan = displayText.trim()
+    if (!textToScan) return
 
-    if (!codeToAnalyze || !emailToUse) return
-    if (!validateEmail(emailToUse)) {
-      setEmailError('Please enter a valid email address')
-      return
-    }
-
-    setIsAnalyzing(true)
+    setIsScanning(true)
     setError(null)
-    setEmailError(null)
-    setAnalysisResult(null)
-    setActiveAgentId(MANAGER_AGENT_ID)
+    setScanResult(null)
+    setActiveAgentId(AGENT_ID)
+    setFilterSeverity('all')
 
-    const langLabel = language === 'auto-detect' ? '' : language
-    const message = `Please analyze the following code and send the report to ${emailToUse}.\n\nProgramming Language: ${language}\n\nCode:\n\`\`\`${langLabel}\n${codeToAnalyze}\n\`\`\`\n\nRecipient Email: ${emailToUse}`
+    const message = `Please scan the following text/data for any Personally Identifiable Information (PII):\n\n${textToScan}`
 
     try {
-      const result = await callAIAgent(message, MANAGER_AGENT_ID)
+      const result = await callAIAgent(message, AGENT_ID)
       if (result.success) {
-        setAnalysisResult(result?.response?.result as AnalysisResult)
+        setScanResult(result?.response?.result as PIIResult)
       } else {
-        setError(result?.error ?? 'Analysis failed. Please try again.')
+        setError(result?.error ?? 'Scan failed. Please try again.')
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
     } finally {
-      setIsAnalyzing(false)
+      setIsScanning(false)
       setActiveAgentId(null)
     }
-  }, [displayCode, displayEmail, language, validateEmail])
+  }, [displayText])
 
   const handleCopy = useCallback(async (text: string, id: string) => {
     const success = await copyToClipboard(text)
@@ -656,54 +691,44 @@ export default function Page() {
   }, [])
 
   const handleClear = useCallback(() => {
-    setCode('')
-    setLanguage('auto-detect')
-    setRecipientEmail('')
-    setAnalysisResult(null)
+    setInputText('')
+    setScanResult(null)
     setError(null)
-    setEmailError(null)
     setExpandedSections({})
     setShowSampleData(false)
+    setFilterSeverity('all')
   }, [])
 
   const toggleSection = useCallback((id: string) => {
     setExpandedSections(prev => ({ ...prev, [id]: prev[id] === undefined ? false : !prev[id] }))
   }, [])
 
-  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setRecipientEmail(e.target.value)
-    if (emailError) setEmailError(null)
-  }, [emailError])
-
-  const handleCodeChange = useCallback((val: string) => {
-    setCode(val)
+  const handleTextChange = useCallback((val: string) => {
+    setInputText(val)
     if (showSampleData) setShowSampleData(false)
   }, [showSampleData])
 
   // Safely extract result data
-  const bugs = Array.isArray(displayResult?.bug_report?.bugs) ? displayResult.bug_report.bugs : []
-  const bugSummary: BugSummary = displayResult?.bug_report?.summary ?? { total_bugs: 0, critical_count: 0, warning_count: 0, info_count: 0 }
-  const perfIssues = Array.isArray(displayResult?.performance_report?.issues) ? displayResult.performance_report.issues : []
-  const perfSummary: PerfSummary = displayResult?.performance_report?.summary ?? { total_issues: 0, high_priority: 0, medium_priority: 0, low_priority: 0 }
-  const complexityRating = displayResult?.performance_report?.complexity_rating ?? ''
-  const suggestionsList = Array.isArray(displayResult?.suggestions) ? displayResult.suggestions : []
-  const deliveryStatus = displayResult?.delivery_status ?? { report_sent: false, recipient_email: '' }
+  const summary: ScanSummary = displayResult?.scan_summary ?? {}
+  const riskAssessment: RiskAssessment = displayResult?.risk_assessment ?? {}
+  const findings = Array.isArray(displayResult?.findings) ? displayResult.findings : []
+  const remediation = Array.isArray(displayResult?.remediation) ? displayResult.remediation : []
 
-  const isFormValid = displayCode.trim().length > 0 && displayEmail.trim().length > 0
   const hasResults = displayResult !== null
+  const isFormValid = displayText.trim().length > 0
 
   return (
     <div style={THEME_VARS} className="min-h-screen bg-background text-foreground font-sans">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border backdrop-blur-xl" style={{ backgroundColor: 'hsl(231 18% 14% / 0.92)' }}>
+      <header className="sticky top-0 z-50 border-b border-border backdrop-blur-xl" style={{ backgroundColor: 'hsl(222 47% 11% / 0.92)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/20">
-              <VscCode className="h-5 w-5 text-primary" />
+            <div className="flex items-center justify-center h-8 w-8 rounded-lg" style={{ backgroundColor: 'hsl(173 80% 50% / 0.15)' }}>
+              <VscShield className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-foreground" style={{ letterSpacing: '-0.01em' }}>CodeSense</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block" style={{ letterSpacing: '-0.01em' }}>AI-Powered Code Review and Analysis</p>
+              <h1 className="text-base font-bold text-foreground" style={{ letterSpacing: '-0.01em' }}>PII Shield</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block" style={{ letterSpacing: '-0.01em' }}>AI-Powered PII Detection & Data Privacy Scanner</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -720,170 +745,233 @@ export default function Page() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left Column - Input Panel */}
-          <div className="w-full lg:w-3/5 space-y-5">
+          {/* Left Column - Data Input (55%) */}
+          <div className="w-full lg:w-[55%] space-y-5">
             <div>
               <h2 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
-                <VscCode className="h-4 w-4 text-primary" />
-                Code Input
+                <VscSearch className="h-4 w-4 text-primary" />
+                Scan Data
               </h2>
-              <p className="text-xs text-muted-foreground mb-3">Paste the code you want analyzed below</p>
+              <p className="text-xs text-muted-foreground mb-3">Paste text, customer records, logs, CSVs, or any data to scan for personally identifiable information.</p>
             </div>
 
-            <CodeEditorArea
-              code={displayCode}
-              onChange={handleCodeChange}
+            <DataEditorArea
+              text={displayText}
+              onChange={handleTextChange}
               lineCount={lineCount}
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="language-select" className="text-xs font-medium text-foreground">Programming Language</Label>
-                <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger id="language-select" className="bg-input border-border text-foreground h-9">
-                    <SelectValue placeholder="Select language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LANGUAGES.map(lang => (
-                      <SelectItem key={lang} value={lang}>
-                        {lang === 'auto-detect' ? 'Auto-detect' : lang.charAt(0).toUpperCase() + lang.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="recipient-email" className="text-xs font-medium text-foreground">
-                  Recipient Email <span className="text-red-400">*</span>
-                </Label>
-                <div className="relative">
-                  <VscMail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    id="recipient-email"
-                    type="email"
-                    placeholder="Enter email for report delivery"
-                    value={showSampleData && !recipientEmail ? 'developer@example.com' : recipientEmail}
-                    onChange={handleEmailChange}
-                    className="bg-input border-border text-foreground h-9 pl-9 text-sm"
-                  />
-                </div>
-                {emailError && (
-                  <p className="text-xs text-red-400 flex items-center gap-1 mt-1">
-                    <HiOutlineExclamationCircle className="h-3.5 w-3.5 flex-shrink-0" />
-                    {emailError}
-                  </p>
-                )}
-              </div>
-            </div>
-
             <Button
-              onClick={handleAnalyze}
-              disabled={isAnalyzing || !isFormValid}
+              onClick={handleScan}
+              disabled={isScanning || !isFormValid}
               className="w-full h-10 font-medium text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200"
             >
-              {isAnalyzing ? (
+              {isScanning ? (
                 <span className="flex items-center gap-2">
                   <VscSearch className="h-4 w-4 animate-spin" />
-                  Analyzing...
+                  Scanning for PII...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <VscSend className="h-4 w-4" />
-                  Analyze and Send Report
+                  <VscShield className="h-4 w-4" />
+                  Scan for PII
                 </span>
               )}
             </Button>
+
+            {/* PII Types Info */}
+            <Card className="border-border">
+              <CardHeader className="py-3 px-4">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <VscKey className="h-3.5 w-3.5" />
+                  Detectable PII Types
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-3 pt-0">
+                <div className="flex flex-wrap gap-1.5">
+                  {PII_TYPES.map(type => (
+                    <Badge key={type} className="bg-secondary/60 text-foreground/70 border border-border text-xs" variant="outline">
+                      {type}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Agent Status Panel */}
             <AgentStatusPanel activeAgentId={activeAgentId} />
           </div>
 
-          {/* Right Column - Results Panel */}
-          <div className="w-full lg:w-2/5">
-            <div className="mb-4">
-              <h2 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
-                <VscDashboard className="h-4 w-4 text-primary" />
-                Analysis Results
-              </h2>
-              <p className="text-xs text-muted-foreground">Review findings and recommendations</p>
+          {/* Right Column - Results (45%) */}
+          <div className="w-full lg:w-[45%]">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
+                  <HiOutlineShieldCheck className="h-4 w-4 text-primary" />
+                  Scan Results
+                </h2>
+                <p className="text-xs text-muted-foreground">Risk assessment, findings, and remediation</p>
+              </div>
+              {hasResults && (
+                <Button
+                  onClick={handleClear}
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <VscTrash className="h-3.5 w-3.5 mr-1" />
+                  Clear
+                </Button>
+              )}
             </div>
 
             <ScrollArea className="lg:h-[calc(100vh-10rem)]">
               <div className="space-y-4 pr-1">
-                {isAnalyzing ? (
+                {isScanning ? (
                   <LoadingSkeletons />
                 ) : !hasResults ? (
                   <EmptyResultsState />
                 ) : (
                   <>
-                    {/* Delivery Status Banner */}
-                    {deliveryStatus?.report_sent && (
-                      <div className="rounded-xl border p-3 flex items-center gap-3" style={{ borderColor: 'hsl(135 94% 60% / 0.3)', backgroundColor: 'hsl(135 94% 60% / 0.07)' }}>
-                        <div className="flex items-center justify-center h-8 w-8 rounded-lg flex-shrink-0" style={{ backgroundColor: 'hsl(135 94% 60% / 0.2)' }}>
-                          <HiOutlineCheckCircle className="h-5 w-5" style={{ color: 'hsl(135 94% 65%)' }} />
+                    {/* Risk Score Card */}
+                    <Card className="border-border shadow-xl">
+                      <CardContent className="py-6">
+                        <RiskScoreGauge
+                          score={riskAssessment?.risk_score ?? 0}
+                          level={riskAssessment?.risk_level ?? 'low'}
+                        />
+
+                        {/* Compliance Flags */}
+                        {Array.isArray(riskAssessment?.compliance_flags) && (riskAssessment.compliance_flags.length ?? 0) > 0 && (
+                          <div className="mt-4">
+                            <p className="text-xs text-muted-foreground text-center mb-2 flex items-center justify-center gap-1">
+                              <VscLock className="h-3 w-3" />
+                              Compliance Flags
+                            </p>
+                            <div className="flex flex-wrap gap-1.5 justify-center">
+                              {riskAssessment.compliance_flags.map((flag, idx) => (
+                                <Badge key={idx} className="bg-red-500/10 text-red-400 border border-red-500/20 text-xs" variant="outline">
+                                  {flag}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Overall Assessment */}
+                        {riskAssessment?.overall_assessment && (
+                          <div className="mt-4 rounded-lg p-3" style={{ backgroundColor: 'hsl(222 47% 8%)' }}>
+                            <p className="text-xs font-medium text-muted-foreground mb-1.5">Overall Assessment</p>
+                            <div className="text-sm text-foreground/85 leading-relaxed">
+                              {renderMarkdown(riskAssessment.overall_assessment)}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Scan Summary Card */}
+                    <Card className="border-border shadow-xl">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center h-9 w-9 rounded-lg" style={{ backgroundColor: 'hsl(173 80% 50% / 0.15)' }}>
+                            <VscSearch className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-base">Scan Summary</CardTitle>
+                            <CardDescription className="text-xs mt-0.5">{summary?.total_pii_found ?? 0} PII instances found</CardDescription>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium" style={{ color: 'hsl(135 94% 70%)' }}>Report Delivered</p>
-                          <p className="text-xs text-muted-foreground truncate">Sent to {deliveryStatus?.recipient_email ?? 'recipient'}</p>
-                        </div>
-                      </div>
-                    )}
+                      </CardHeader>
+                      <CardContent className="space-y-3 pt-0">
+                        <ScanSummaryGrid summary={summary} />
 
-                    {/* Bug Report */}
-                    <BugReportSection
-                      bugs={bugs}
-                      summary={bugSummary}
+                        {/* Categories Detected */}
+                        {Array.isArray(summary?.categories_detected) && (summary.categories_detected.length ?? 0) > 0 && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-2">Categories Detected</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {summary.categories_detected.map((cat, idx) => (
+                                <Badge key={idx} className="bg-primary/10 text-primary border border-primary/25 text-xs" variant="outline">
+                                  {cat}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Findings Section */}
+                    <FindingsSection
+                      findings={findings}
+                      expandedSections={expandedSections}
+                      toggleSection={toggleSection}
+                      onCopy={handleCopy}
+                      copiedId={copiedId}
+                      filterSeverity={filterSeverity}
+                      setFilterSeverity={setFilterSeverity}
+                    />
+
+                    {/* Remediation Section */}
+                    <RemediationSection
+                      remediation={remediation}
                       expandedSections={expandedSections}
                       toggleSection={toggleSection}
                       onCopy={handleCopy}
                       copiedId={copiedId}
                     />
 
-                    {/* Performance Report */}
-                    <PerformanceSection
-                      issues={perfIssues}
-                      summary={perfSummary}
-                      complexityRating={complexityRating}
-                      expandedSections={expandedSections}
-                      toggleSection={toggleSection}
-                      onCopy={handleCopy}
-                      copiedId={copiedId}
-                    />
-
-                    {/* Suggestions */}
-                    <SuggestionsSection
-                      suggestions={suggestionsList}
-                      expandedSections={expandedSections}
-                      toggleSection={toggleSection}
-                      onCopy={handleCopy}
-                      copiedId={copiedId}
-                    />
-
-                    {/* Clear Button */}
+                    {/* Copy Full Report */}
                     <Button
-                      onClick={handleClear}
+                      onClick={() => {
+                        const reportText = [
+                          `PII Shield Scan Report`,
+                          `Risk Score: ${riskAssessment?.risk_score ?? 0}/100 (${riskAssessment?.risk_level ?? 'unknown'})`,
+                          `Total PII Found: ${summary?.total_pii_found ?? 0}`,
+                          ``,
+                          `Assessment: ${riskAssessment?.overall_assessment ?? ''}`,
+                          ``,
+                          `Compliance Flags: ${Array.isArray(riskAssessment?.compliance_flags) ? riskAssessment.compliance_flags.join(', ') : 'None'}`,
+                          ``,
+                          `Findings:`,
+                          ...findings.map((f, i) => `${i + 1}. [${(f?.severity ?? 'low').toUpperCase()}] ${f?.pii_type ?? 'Unknown'}: ${f?.matched_text ?? ''} (${f?.location ?? ''})`),
+                          ``,
+                          `Remediation:`,
+                          ...remediation.map((r, i) => `${i + 1}. [${(r?.priority ?? 'low').toUpperCase()}] ${r?.action ?? ''}: ${r?.description ?? ''}`)
+                        ].join('\n')
+                        handleCopy(reportText, 'full-report')
+                      }}
                       variant="outline"
                       className="w-full h-9 text-sm border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                     >
-                      <VscTrash className="h-4 w-4 mr-2" />
-                      Clear and New Analysis
+                      {copiedId === 'full-report' ? (
+                        <span className="flex items-center gap-2">
+                          <VscCheck className="h-4 w-4 text-emerald-400" />
+                          Report Copied
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <VscCopy className="h-4 w-4" />
+                          Copy Full Report
+                        </span>
+                      )}
                     </Button>
                   </>
                 )}
 
-                {/* Error state when no results yet */}
-                {error && !hasResults && !isAnalyzing && (
-                  <div className="rounded-xl border border-red-500/30 p-5 text-center" style={{ backgroundColor: 'hsl(0 100% 62% / 0.06)' }}>
+                {/* Error state */}
+                {error && !hasResults && !isScanning && (
+                  <div className="rounded-xl border border-red-500/30 p-5 text-center" style={{ backgroundColor: 'hsl(0 84% 60% / 0.06)' }}>
                     <HiOutlineExclamationCircle className="h-8 w-8 text-red-400 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-red-400 mb-1">Analysis Failed</p>
+                    <p className="text-sm font-medium text-red-400 mb-1">Scan Failed</p>
                     <p className="text-xs text-muted-foreground mb-3">{error}</p>
                     <Button
-                      onClick={handleAnalyze}
+                      onClick={handleScan}
                       variant="outline"
                       size="sm"
                       className="text-xs border-red-500/30 text-red-400 hover:bg-red-500/10"
-                      disabled={isAnalyzing || !isFormValid}
+                      disabled={isScanning || !isFormValid}
                     >
                       Try Again
                     </Button>

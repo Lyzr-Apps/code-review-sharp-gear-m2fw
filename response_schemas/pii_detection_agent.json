@@ -1,0 +1,75 @@
+{
+  "agent_name": "PII Detection Agent",
+  "agent_id": "6993612096cbde6a643c0a2c",
+  "description": "Expert AI agent that scans text and data inputs to detect, classify, and report all forms of Personally Identifiable Information (PII) with severity ratings, risk assessments, and actionable remediation recommendations for data privacy compliance.",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "response_schema": {
+    "type": "object",
+    "properties": {
+      "scan_summary": {
+        "type": "object",
+        "properties": {
+          "total_pii_found": { "type": "number" },
+          "critical_count": { "type": "number" },
+          "high_count": { "type": "number" },
+          "medium_count": { "type": "number" },
+          "low_count": { "type": "number" },
+          "categories_detected": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["total_pii_found", "critical_count", "high_count", "medium_count", "low_count", "categories_detected"],
+        "additionalProperties": false
+      },
+      "risk_assessment": {
+        "type": "object",
+        "properties": {
+          "risk_score": { "type": "number" },
+          "risk_level": { "type": "string" },
+          "compliance_flags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "overall_assessment": { "type": "string" }
+        },
+        "required": ["risk_score", "risk_level", "compliance_flags", "overall_assessment"],
+        "additionalProperties": false
+      },
+      "findings": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "pii_type": { "type": "string" },
+            "severity": { "type": "string" },
+            "matched_text": { "type": "string" },
+            "location": { "type": "string" },
+            "context": { "type": "string" },
+            "explanation": { "type": "string" }
+          },
+          "required": ["pii_type", "severity", "matched_text", "location", "context", "explanation"],
+          "additionalProperties": false
+        }
+      },
+      "remediation": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "priority": { "type": "string" },
+            "action": { "type": "string" },
+            "description": { "type": "string" },
+            "compliance_reference": { "type": "string" }
+          },
+          "required": ["priority", "action", "description", "compliance_reference"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["scan_summary", "risk_assessment", "findings", "remediation"],
+    "additionalProperties": false
+  }
+}
