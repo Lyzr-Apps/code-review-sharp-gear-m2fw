@@ -1,0 +1,17 @@
+CodeSense — AI Code Review & Quality Report Agent
+Build completed successfully.
+
+Agents:
+- Code Review Coordinator (Manager): 699356edc1a177c86d6ed9b1
+- Bug Detection Agent: 699356bb606d81ae3a56a988
+- Performance Analyzer Agent: 699356bc606d81ae3a56a98a
+- Report & Delivery Agent: 699356d2b6bc6d320bbb024b
+
+Files:
+- workflow.json
+- workflow_state.json
+- response_schemas/bug_detection_agent.json
+- response_schemas/performance_analyzer_agent.json
+- response_schemas/report_delivery_agent.json
+- response_schemas/code_review_coordinator.json
+- app/page.tsx
