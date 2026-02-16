@@ -1,0 +1,41 @@
+{
+  "agent_name": "Bug Detection Agent",
+  "agent_id": "699356bb606d81ae3a56a988",
+  "description": "Performs static analysis on submitted code to identify bugs, logical errors, null pointer risks, type mismatches, edge case failures, and security vulnerabilities. Returns categorized findings with severity levels and line references.",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "response_schema": {
+    "type": "object",
+    "properties": {
+      "bugs": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "severity": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "line_reference": { "type": "string" },
+            "category": { "type": "string" }
+          },
+          "required": ["severity", "title", "description", "line_reference", "category"],
+          "additionalProperties": false
+        }
+      },
+      "summary": {
+        "type": "object",
+        "properties": {
+          "total_bugs": { "type": "number" },
+          "critical_count": { "type": "number" },
+          "warning_count": { "type": "number" },
+          "info_count": { "type": "number" }
+        },
+        "required": ["total_bugs", "critical_count", "warning_count", "info_count"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["bugs", "summary"],
+    "additionalProperties": false
+  }
+}

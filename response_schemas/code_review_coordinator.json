@@ -1,0 +1,110 @@
+{
+  "agent_name": "Code Review Coordinator",
+  "agent_id": "699356edc1a177c86d6ed9b1",
+  "description": "Coordinates the code review workflow by routing submitted code to specialized analysis sub-agents, aggregates their findings into a unified quality report, and ensures the final report is emailed to the user.",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "is_manager": true,
+  "managed_agents": [
+    "699356bb606d81ae3a56a988",
+    "699356bc606d81ae3a56a98a",
+    "699356d2b6bc6d320bbb024b"
+  ],
+  "response_schema": {
+    "type": "object",
+    "properties": {
+      "bug_report": {
+        "type": "object",
+        "properties": {
+          "bugs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "severity": { "type": "string" },
+                "title": { "type": "string" },
+                "description": { "type": "string" },
+                "line_reference": { "type": "string" },
+                "category": { "type": "string" }
+              },
+              "required": ["severity", "title", "description", "line_reference", "category"],
+              "additionalProperties": false
+            }
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "total_bugs": { "type": "number" },
+              "critical_count": { "type": "number" },
+              "warning_count": { "type": "number" },
+              "info_count": { "type": "number" }
+            },
+            "required": ["total_bugs", "critical_count", "warning_count", "info_count"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["bugs", "summary"],
+        "additionalProperties": false
+      },
+      "performance_report": {
+        "type": "object",
+        "properties": {
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "priority": { "type": "string" },
+                "title": { "type": "string" },
+                "description": { "type": "string" },
+                "recommendation": { "type": "string" },
+                "impact": { "type": "string" }
+              },
+              "required": ["priority", "title", "description", "recommendation", "impact"],
+              "additionalProperties": false
+            }
+          },
+          "complexity_rating": { "type": "string" },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "total_issues": { "type": "number" },
+              "high_priority": { "type": "number" },
+              "medium_priority": { "type": "number" },
+              "low_priority": { "type": "number" }
+            },
+            "required": ["total_issues", "high_priority", "medium_priority", "low_priority"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["issues", "complexity_rating", "summary"],
+        "additionalProperties": false
+      },
+      "delivery_status": {
+        "type": "object",
+        "properties": {
+          "report_sent": { "type": "boolean" },
+          "recipient_email": { "type": "string" }
+        },
+        "required": ["report_sent", "recipient_email"],
+        "additionalProperties": false
+      },
+      "suggestions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": { "type": "number" },
+            "suggestion": { "type": "string" },
+            "reason": { "type": "string" }
+          },
+          "required": ["rank", "suggestion", "reason"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["bug_report", "performance_report", "delivery_status", "suggestions"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "agent_name": "Code Review Coordinator",
+  "agent_id": "699356edc1a177c86d6ed9b1",
+  "description": "Coordinates the code review workflow by routing submitted code to specialized analysis sub-agents, aggregates their findings into a unified quality report, and ensures the final report is emailed to the user.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "bug_report": {
+      "bugs": [
+        {
+          "severity": "string",
+          "title": "string",
+          "description": "string",
+          "line_reference": "string",
+          "category": "string"
+        }
+      ],
+      "summary": {
+        "total_bugs": "number",
+        "critical_count": "number",
+        "warning_count": "number",
+        "info_count": "number"
+      }
+    },
+    "performance_report": {
+      "issues": [
+        {
+          "priority": "string",
+          "title": "string",
+          "description": "string",
+          "recommendation": "string",
+          "impact": "string"
+        }
+      ],
+      "complexity_rating": "string",
+      "summary": {
+        "total_issues": "number",
+        "high_priority": "number",
+        "medium_priority": "number",
+        "low_priority": "number"
+      }
+    },
+    "delivery_status": {
+      "report_sent": "boolean",
+      "recipient_email": "string"
+    },
+    "suggestions": [
+      {
+        "rank": "number",
+        "suggestion": "string",
+        "reason": "string"
+      }
+    ]
+  },
+  "example_response": {
+    "bug_report": {
+      "bugs": [
+        {
+          "severity": "sample string",
+          "title": "sample string",
+          "description": "sample string",
+          "line_reference": "sample string",
+          "category": "sample string"
+        }
+      ],
+      "summary": {
+        "total_bugs": 0,
+        "critical_count": 0,
+        "warning_count": 0,
+        "info_count": 0
+      }
+    },
+    "performance_report": {
+      "issues": [
+        {
+          "priority": "sample string",
+          "title": "sample string",
+          "description": "sample string",
+          "recommendation": "sample string",
+          "impact": "sample string"
+        }
+      ],
+      "complexity_rating": "sample string",
+      "summary": {
+        "total_issues": 0,
+        "high_priority": 0,
+        "medium_priority": 0,
+        "low_priority": 0
+      }
+    },
+    "delivery_status": {
+      "report_sent": false,
+      "recipient_email": "sample string"
+    },
+    "suggestions": [
+      {
+        "rank": 0,
+        "suggestion": "sample string",
+        "reason": "sample string"
+      }
+    ]
+  }
+}

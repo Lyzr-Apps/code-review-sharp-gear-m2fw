@@ -1,0 +1,27 @@
+{
+  "agents": {
+    "bug_detection_agent": {
+      "agent_id": "699356bb606d81ae3a56a988",
+      "name": "Bug Detection Agent"
+    },
+    "performance_analyzer_agent": {
+      "agent_id": "699356bc606d81ae3a56a98a",
+      "name": "Performance Analyzer Agent"
+    },
+    "report_delivery_agent": {
+      "agent_id": "699356d2b6bc6d320bbb024b",
+      "name": "Report & Delivery Agent",
+      "tools": ["GMAIL_SEND_EMAIL"]
+    },
+    "code_review_coordinator": {
+      "agent_id": "699356edc1a177c86d6ed9b1",
+      "name": "Code Review Coordinator",
+      "is_manager": true,
+      "managed_agents": [
+        "699356bb606d81ae3a56a988",
+        "699356bc606d81ae3a56a98a",
+        "699356d2b6bc6d320bbb024b"
+      ]
+    }
+  }
+}

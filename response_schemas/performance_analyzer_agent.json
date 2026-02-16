@@ -1,0 +1,42 @@
+{
+  "agent_name": "Performance Analyzer Agent",
+  "agent_id": "699356bc606d81ae3a56a98a",
+  "description": "Evaluates code for performance bottlenecks including time/space complexity issues, unnecessary loops, memory leaks, redundant computations, and suboptimal data structure usage. Returns optimization recommendations with priority ranking.",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "response_schema": {
+    "type": "object",
+    "properties": {
+      "issues": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "priority": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "recommendation": { "type": "string" },
+            "impact": { "type": "string" }
+          },
+          "required": ["priority", "title", "description", "recommendation", "impact"],
+          "additionalProperties": false
+        }
+      },
+      "complexity_rating": { "type": "string" },
+      "summary": {
+        "type": "object",
+        "properties": {
+          "total_issues": { "type": "number" },
+          "high_priority": { "type": "number" },
+          "medium_priority": { "type": "number" },
+          "low_priority": { "type": "number" }
+        },
+        "required": ["total_issues", "high_priority", "medium_priority", "low_priority"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["issues", "complexity_rating", "summary"],
+    "additionalProperties": false
+  }
+}

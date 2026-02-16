@@ -1,0 +1,31 @@
+{
+  "agent_name": "Report & Delivery Agent",
+  "agent_id": "699356d2b6bc6d320bbb024b",
+  "description": "Aggregates findings from bug detection and performance analysis into a structured, well-formatted code quality report with actionable improvement suggestions, then sends the report via Gmail to the specified recipient.",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "response_schema": {
+    "type": "object",
+    "properties": {
+      "report_sent": { "type": "boolean" },
+      "recipient_email": { "type": "string" },
+      "suggestions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": { "type": "number" },
+            "suggestion": { "type": "string" },
+            "reason": { "type": "string" }
+          },
+          "required": ["rank", "suggestion", "reason"],
+          "additionalProperties": false
+        }
+      },
+      "report_summary": { "type": "string" }
+    },
+    "required": ["report_sent", "recipient_email", "suggestions", "report_summary"],
+    "additionalProperties": false
+  }
+}

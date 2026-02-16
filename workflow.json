@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "input_node",
+      "type": "Input",
+      "label": "User Code Input",
+      "nodeCategory": "input"
+    },
+    {
+      "id": "manager_agent",
+      "type": "Agent",
+      "label": "Code Review Coordinator",
+      "nodeCategory": "agent",
+      "agent_id": "699356edc1a177c86d6ed9b1"
+    },
+    {
+      "id": "bug_agent",
+      "type": "Agent",
+      "label": "Bug Detection Agent",
+      "nodeCategory": "agent",
+      "agent_id": "699356bb606d81ae3a56a988"
+    },
+    {
+      "id": "performance_agent",
+      "type": "Agent",
+      "label": "Performance Analyzer Agent",
+      "nodeCategory": "agent",
+      "agent_id": "699356bc606d81ae3a56a98a"
+    },
+    {
+      "id": "report_agent",
+      "type": "Agent",
+      "label": "Report & Delivery Agent",
+      "nodeCategory": "agent",
+      "agent_id": "699356d2b6bc6d320bbb024b"
+    },
+    {
+      "id": "output_node",
+      "type": "Output",
+      "label": "Review Results",
+      "nodeCategory": "end"
+    }
+  ],
+  "edges": [
+    { "source": "input_node", "target": "manager_agent" },
+    { "source": "manager_agent", "target": "bug_agent" },
+    { "source": "manager_agent", "target": "performance_agent" },
+    { "source": "manager_agent", "target": "report_agent" },
+    { "source": "bug_agent", "target": "output_node" },
+    { "source": "performance_agent", "target": "output_node" },
+    { "source": "report_agent", "target": "output_node" }
+  ]
+}
